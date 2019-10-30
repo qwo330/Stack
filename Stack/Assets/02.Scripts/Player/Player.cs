@@ -57,23 +57,24 @@ namespace Objects.Player
 
         void Update()
         {
-            if(UICamera.hoveredObject)
-                Debug.Log(UICamera.hoveredObject.name);
-
-            if (!UICamera.hoveredObject.CompareTag("TouchableUI"))
+            GameObject obj = UICamera.hoveredObject;
+            if (obj != null)
             {
-                if (Input.GetMouseButtonDown(0))
+                if (!obj.CompareTag("TouchableUI"))
                 {
-                    jumpCheck();
-                }
-                else if (Input.GetMouseButton(0))
-                {
-                    move();
-                }
-                else if (Input.GetMouseButtonUp(0))
-                {
-                    anim.SetBool("RunL", false);
-                    anim.SetBool("RunR", false);
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        jumpCheck();
+                    }
+                    else if (Input.GetMouseButton(0))
+                    {
+                        move();
+                    }
+                    else if (Input.GetMouseButtonUp(0))
+                    {
+                        anim.SetBool("RunL", false);
+                        anim.SetBool("RunR", false);
+                    }
                 }
             }
         }
