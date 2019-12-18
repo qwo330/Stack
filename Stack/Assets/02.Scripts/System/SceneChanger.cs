@@ -3,77 +3,68 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Managers.SceneChanger
+public enum SceneNumber
 {
-    public enum SceneNumber
+    Title,
+    Robby,
+    SelectStage,
+    InGame,
+}
+
+public enum PlayerType
+{
+    Princess,
+
+}
+
+public class SceneChanger : Singleton<SceneChanger>
+{
+    [SerializeField]
+    SceneNumber currentScene;
+
+    public int StageLevel;
+
+
+    float fadeTime = 1f, waitTime = 1f;
+    Color fadeColor;
+    SpriteRenderer fadeObject;
+    WaitForEndOfFrame frameDelay = new WaitForEndOfFrame();
+
+    public void Init()
     {
-        Title,
-        Robby,
-        SelectStage,
-        InGame,
+        currentScene = SceneNumber.Title;
     }
 
-    public enum PlayerType
+    public void ChanageScene(SceneNumber nextScene)
     {
-        Princess,
-
+        //StartCoroutine(FadeOut());
+        SceneManager.LoadScene(nextScene.ToString());
+        //StartCoroutine(FadeIn());
     }
 
-    public class SceneChanger : Singleton<SceneChanger>
+    IEnumerator FadeOut() // 시작 // 점점 검게
     {
-        [SerializeField]
-        SceneNumber currenScene;
+        float elapsedTime = 0f;
 
-        public int StageLevel;
-
-
-        float fadeTime = 1f, waitTime = 1f;
-        Color fadeColor;
-        SpriteRenderer fadeObject;
-        WaitForEndOfFrame frameDelay = new WaitForEndOfFrame();
-
-        public void Init()
+        while (elapsedTime < fadeTime)
         {
-            currenScene = SceneNumber.Title;
+            yield return frameDelay;
+            elapsedTime += Time.deltaTime;
+            fadeColor.a = Mathf.Clamp01(elapsedTime / fadeTime);
+            fadeObject.color = fadeColor;
         }
+    }
 
-        public void ChanageScene(SceneNumber nextScene)
+    IEnumerator FadeIn() // 끝 // 점점 투명하게
+    {
+        float elapsedTime = 0f;
+
+        while (elapsedTime < fadeTime)
         {
-            //StartCoroutine(FadeOut());
-            SceneManager.LoadScene(nextScene.ToString());
-            //StartCoroutine(FadeIn());
-        }
-
-        IEnumerator FadeOut() // 시작 // 점점 검게
-        {
-            //UIPresenter.Instance.UICanvas.SetActive(false);
-            //UIPresenter.Instance.UIRoot.SetActive(false);
-
-            float elapsedTime = 0f;
-
-            while (elapsedTime < fadeTime)
-            {
-                yield return frameDelay;
-                elapsedTime += Time.deltaTime;
-                fadeColor.a = Mathf.Clamp01(elapsedTime / fadeTime);
-                fadeObject.color = fadeColor;
-            }
-        }
-
-        IEnumerator FadeIn() // 끝 // 점점 투명하게
-        {
-            float elapsedTime = 0f;
-
-            while (elapsedTime < fadeTime)
-            {
-                yield return frameDelay;
-                elapsedTime += Time.deltaTime;
-                fadeColor.a = 1.0f - Mathf.Clamp01(elapsedTime / fadeTime);
-                fadeObject.color = fadeColor;
-            }
-
-            //UIPresenter.Instance.UICanvas.SetActive(true);
-            //UIPresenter.Instance.UIRoot.SetActive(true);
+            yield return frameDelay;
+            elapsedTime += Time.deltaTime;
+            fadeColor.a = 1.0f - Mathf.Clamp01(elapsedTime / fadeTime);
+            fadeObject.color = fadeColor;
         }
     }
 }

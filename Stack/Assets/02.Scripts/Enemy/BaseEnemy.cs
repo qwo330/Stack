@@ -1,91 +1,90 @@
 ﻿using UnityEngine;
 using System.Collections;
-using Managers.InGameManager;
 
-namespace Objects.Enemy
+public abstract class BaseEnemy : MonoBehaviour
 {
-    public abstract class BaseEnemy : MonoBehaviour
+    [SerializeField]
+    protected int hp, maxHP;
+
+    [SerializeField]
+    protected float moveSpeed;
+
+    [SerializeField]
+    protected float attackInterval;
+
+    Coroutine attackRoutine;
+
+    void FixedUpdate()
     {
-        protected float moveSpeed;
-        [SerializeField]
-        protected int hP, maxHP;
-        protected float attackInterval;
+        Move();
+    }
 
-        void FixedUpdate()
+    void Move()
+    {
+        transform.Translate(0f, -moveSpeed * Time.deltaTime, 0f);
+    }
+
+    public void SetEnemy()
+    {
+        hp = maxHP;
+        attackRoutine = StartCoroutine(CO_Attack());
+    }
+
+    public virtual IEnumerator CO_Attack()
+    {
+        while (true)
         {
-            move();
+            yield return new WaitForSeconds(attackInterval);
+
+            GameObject bullet = ObjectPool.Get.GetObject(Defines.key_HitEffect);
+            bullet.transform.position = new Vector3(transform.position.x, transform.position.y - 1f, 0f);
         }
+    }
 
-        void move()
+
+    public void Damage()
+    {
+        hp--;
+        if (hp <= 0)
         {
-            transform.Translate(0f, -moveSpeed * Time.deltaTime, 0f);
+            Dead();
         }
+    }
 
-        public void Demage()
+    void Dead()
+    {
+        StopCoroutine(attackRoutine);
+        ShowDeadEffect();
+        DropManaStone();
+        ObjectPool.Get.ReturnObject(gameObject);
+    }
+
+    void DropManaStone()
+    {
+        GameObject go = ObjectPool.Get.GetObject(Defines.key_ManaStone);
+        go.transform.position = transform.position;
+    }
+
+    void ShowDeadEffect()
+    {
+        HitEffect effect = ObjectPool.Get.GetObject(Defines.key_HitEffect).GetComponent<HitEffect>();
+        effect.transform.position = transform.position + new Vector3(0, 0, 1f);
+        effect.ShowEffect();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Player") || other.gameObject.CompareTag("PlayerBullet"))
         {
-            hP--;
-            if (hP <= 0)
-            {
-                StartCoroutine(deadEffect());
-            }
+            Damage();
         }
+    }
 
-        void dead()
+    void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("Boundary"))
         {
-            StopCoroutine(attack());
-            InGameManager.Instance.dropManaStone(transform.position);
-            InGameManager.Instance.Pool.ReturnObject(gameObject, ObjectType.Enemy);
-        }
-
-        IEnumerator deadEffect()
-        {
-            GameObject effect = InGameManager.Instance.Pool.GetObject(ObjectType.HitEffect);
-            effect.transform.position = transform.position + new Vector3(0, 0, 1f);
-
-            yield return new WaitForSeconds(0.1f);
-            InGameManager.Instance.Pool.ReturnObject(effect, ObjectType.HitEffect);
-
-            StopCoroutine(deadEffect());
-            dead();
-        }
-
-        public virtual IEnumerator attack()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(attackInterval);
-
-                GameObject bullet = InGameManager.Instance.Pool.GetObject(ObjectType.EnemyBullet);
-                bullet.transform.position = new Vector3(transform.position.x, transform.position.y - 1f, 0f);
-            }
-        }
-
-        void createManaStone()
-        {
-            GameObject manaStone = InGameManager.Instance.Pool.GetObject(ObjectType.EnemyBullet);
-            manaStone.transform.position = transform.position;
-        }
-
-        public void ResetEnemy()
-        {
-            hP = maxHP;
-            StartCoroutine(attack());
-        }
-
-        void OnTriggerEnter(Collider other)
-        {
-            if (other.gameObject.CompareTag("Player") || other.gameObject.CompareTag("PlayerBullet"))
-            {
-                Demage();
-            } 
-        }
-
-        void OnTriggerExit(Collider other)
-        {
-            if (other.gameObject.CompareTag("Boundary"))
-            {
-                InGameManager.Instance.Pool.ReturnObject(gameObject, ObjectType.Enemy);
-            }
+            ObjectPool.Get.ReturnObject(gameObject);
         }
     }
 }

@@ -1,32 +1,25 @@
 ﻿using UnityEngine;
 
-namespace InGameSystem.Camera
+public class CameraCtrl : MonoBehaviour
 {
-    public class CameraCtrl : MonoBehaviour
+    Transform player;
+    Vector3 cameraOffset = new Vector3(4f, 5f, -10f);
+
+    public void Init(Transform player)
     {
-        GameObject player;
+        this.player = player;
+    }
 
-        public void Init()
+    void LateUpdate()
+    {
+        if (player != null)
         {
-            player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null)
-            {
-                Debug.Log("플레이어를 찾을 수 없음");
-                return;
-            }
+            FollowPlayer();
         }
+    }
 
-        void LateUpdate()
-        {
-            if (player != null)
-            {
-                followPlayer();
-            }
-        }
-
-        void followPlayer()
-        {
-            transform.position = new Vector3(4f, player.transform.position.y + Defines.CAMERAGAP, 10f);
-        }
+    void FollowPlayer()
+    {
+        transform.position = player.position.y * Vector3.up + cameraOffset;
     }
 }
