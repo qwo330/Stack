@@ -4,22 +4,31 @@ public class Magician : Player
 {
     protected override void SetPlayer()
     {
-        maxHP = 300;
+        maxHP = 100f;
         hp = maxHP;
     }
 
-    public override void Skill1()
+    public override void Skill_1()
     {
-        Debug.Log("Skill 1");
+        if (InGameManager.Instance.UseManaStone(1))
+        {
+            Debug.Log("Magician Skill 1");
+        }
     }
 
-    public override void Skill2()
+    public override void Skill_2()
     {
-        Debug.Log("Skill 2");
+        if (InGameManager.Instance.UseManaStone(2))
+        {
+            Debug.Log("Magician Skill 2");
+        }
     }
 
-    public override void Skill3()
+    public override void Skill_3()
     {
-        Debug.Log("Skill 3");
+        if (InGameManager.Instance.UseManaStone(3))
+        {
+            Debug.Log("Magician Skill 3");
+        }
     }
 }

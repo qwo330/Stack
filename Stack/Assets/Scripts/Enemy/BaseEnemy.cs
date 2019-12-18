@@ -74,7 +74,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Player") || other.gameObject.CompareTag("PlayerBullet"))
+        if (other.gameObject.CompareTag(Defines.key_Player) || other.gameObject.CompareTag(Defines.key_PlayerBullet))
         {
             Damage();
         }
@@ -82,7 +82,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.CompareTag("Boundary"))
+        if (other.gameObject.CompareTag(Defines.key_Boundary))
         {
             ObjectPool.Get.ReturnObject(gameObject);
         }

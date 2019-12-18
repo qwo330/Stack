@@ -14,15 +14,30 @@ public class UI_Ingame : MonoBehaviour
 
     [SerializeField]
     Image imgLife;
+
+    [SerializeField]
+    Button btnPause;
+
+    [SerializeField]
+    Slider skillSlider;
     #endregion
 
-    float lifeWitdh, lifeHeight;
+    float skillSliderValue;
 
-    void Awake()
+    void Update()
     {
-        Sprite heart = imgLife.sprite;
-        lifeWitdh = heart.rect.width;
-        lifeHeight = heart.rect.height;
+        if (skillSliderValue != 0 && Input.GetMouseButtonUp(0))
+        {
+            if (skillSliderValue == 1)
+                Skill_3();
+            else if (0.6f <= skillSliderValue && skillSliderValue < 1)
+                Skill_2();
+            else if (0.3f <= skillSliderValue && skillSliderValue < 0.6f)
+                Skill_1();
+
+            skillSlider.value = 0;
+            skillSliderValue = 0;
+        }
     }
 
     public void StartStage(int level)
@@ -30,13 +45,12 @@ public class UI_Ingame : MonoBehaviour
         // todo : level에 따른 plattime 세팅?
         ShowPlayTime(Defines.PLAY_TIME);
         ShowCube(0);
-        ShowPlayerLife(InGameManager.Instance.player.maxHP);
+        ShowPlayerLife(1);
     }
 
-    public void ShowPlayerLife(float life)
+    public void ShowPlayerLife(float ratio)
     {
-        float width = lifeWitdh * life;
-        imgLife.rectTransform.sizeDelta = new Vector2(width, lifeHeight);
+        imgLife.fillAmount = ratio;
     }
 
     public void ShowPlayTime(float time)
@@ -46,6 +60,37 @@ public class UI_Ingame : MonoBehaviour
 
     public void ShowCube(int count)
     {
-        txtTime.text = count.ToString();
+        txtCube.text = count.ToString();
+    }
+
+    public void OnClickPause()
+    {
+        GameState state = InGameManager.Instance.CurrentState == GameState.Play ? GameState.Stop : GameState.Play;
+        InGameManager.Instance.SetGameState(state);
+
+        // todo : pause 팝업
+    }
+
+    public void OnSlideSkill()
+    {
+        skillSliderValue = skillSlider.value;
+    }
+
+    void Skill_1()
+    {
+        Debug.Log("Call Skill 1");
+        InGameManager.Instance.player.Skill_1();
+    }
+
+    void Skill_2()
+    {
+        Debug.Log("Call Skill 2");
+        InGameManager.Instance.player.Skill_2();
+    }
+
+    void Skill_3()
+    {
+        Debug.Log("Call Skill 3");
+        InGameManager.Instance.player.Skill_3();
     }
 }

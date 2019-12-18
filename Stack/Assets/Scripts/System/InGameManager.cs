@@ -26,33 +26,25 @@ public class InGameManager : Singleton<InGameManager>
 
     #endregion
     public Event<float> playerHitEvent = new Event<float>();
-
-    GameState gameState = GameState.Ready;
-    public GameState CurrentState
-    {
-        get
-        {
-            return gameState;
-        }
-    }
+    public GameState CurrentState { get; private set; }
 
     public Player player { get; private set; }
     WaitForSeconds updateTime = new WaitForSeconds(1f);
 
 
     float remainPlayTime;
-    int ManaStone;
+    int cubeCount;
 
 
     public void Init()
     {
+        SetGameState(GameState.Ready);
         playerHitEvent.AddListener(ShowPlayerLife);
-        player.Init();
     }
 
-    void ShowPlayerLife(float life)
+    void ShowPlayerLife(float ratio)
     {
-        gameUI.ShowPlayerLife(life);
+        gameUI.ShowPlayerLife(ratio);
     }
 
     void ShowPlayTime(float time)
@@ -72,6 +64,8 @@ public class InGameManager : Singleton<InGameManager>
                 Debug.Log("플레이어를 찾을 수 없음");
                 return;
             }
+
+            player.Init();
         }
 
         cameraCtrl.Init(player.transform);
@@ -79,7 +73,8 @@ public class InGameManager : Singleton<InGameManager>
         remainPlayTime = SetPlayTime(level);
         gameUI.StartStage(level);
 
-        StartCoroutine(CO_SpawnEnemy());
+        SetGameState(GameState.Play);
+        //StartCoroutine(CO_SpawnEnemy());
         StartCoroutine(CO_Elapse());
     }
 
@@ -89,16 +84,27 @@ public class InGameManager : Singleton<InGameManager>
         return Defines.PLAY_TIME;
     }
 
+    public void SetGameState(GameState state)
+    {
+        CurrentState = state;
+    }
+
     IEnumerator CO_Elapse()
     {
         while (remainPlayTime > 0)
         {
-            if (CurrentState != GameState.Play || CurrentState == GameState.Stop)
-                StopAllCoroutines();
-
-            yield return updateTime;
-            remainPlayTime--;
-            ShowPlayTime(remainPlayTime);
+            //if (CurrentState == GameState.Stop)
+            //{
+            //    yield return null;
+            //}
+            if (CurrentState == GameState.Play)
+            {
+                yield return updateTime;
+                remainPlayTime--;
+                ShowPlayTime(remainPlayTime);
+            }
+            else
+                yield return null;
         }
 
         GameOver();
@@ -111,14 +117,15 @@ public class InGameManager : Singleton<InGameManager>
         {
             if (CurrentState == GameState.Play)
             {
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     GameObject enemy = ObjectPool.Get.GetObject(Defines.key_Zombie);
                     Vector3 spawnPos = new Vector3(Random.Range(0, Defines._Width), player.transform.position.y + Defines._Height, 0);
                     enemy.transform.position = spawnPos;
                     enemy.GetComponent<BaseEnemy>().SetEnemy();
-                    yield return new WaitForSeconds(Defines.WAVE_INTERVAL);
+                    yield return new WaitForSeconds(Defines.SPAWN_INTERVAL);
                 }
+                yield return new WaitForSeconds(Defines.WAVE_INTERVAL);
             }
         }
     }
@@ -126,28 +133,30 @@ public class InGameManager : Singleton<InGameManager>
     public void GameOver()
     {
         Debug.Log("GAME OVER!!");
+        SetGameState(GameState.GameOver);
         
     }
 
     void Clear()
     {
         Debug.Log("GAME CLEAR~@@");
+        SetGameState(GameState.Clear);
         
     }
 
-    public void UseManaStone(int count)
+    public bool UseManaStone(int count)
     {
         // todo : 화면 상단부터 count 수만큼의 마나 스톤을 제거(하고 스킬 사용)
-        if (dic.Count < count)
+        if (cubeCount < count)
         {
             Debug.Log("자원이 부족합니다.");
-            return;
+            return false;
         }
 
         //width : 9, height = 20
         for (int key = (MaxHeight * 10) - 1; key >= 0; key--)
         {
-            if (count == 0) return;
+            if (count == 0) return false;
             if (key % 10 == 9) key--;
 
             if (dic.ContainsKey(key))
@@ -157,12 +166,15 @@ public class InGameManager : Singleton<InGameManager>
                 dic.TryGetValue(key, out obj);
                 dic.Remove(key);
                 count--;
-                ManaStone--;
+                cubeCount--;
 
                 ObjectPool.Get.ReturnObject(obj);
                 obj = null;
             }
         }
+
+        gameUI.ShowCube(cubeCount);
+        return true;
     }
 
     public void StackManaStone(GameObject manaStone)
@@ -175,7 +187,7 @@ public class InGameManager : Singleton<InGameManager>
     public void DropManaStone(Vector3 enemyPos)
     {
         GameObject obj = ObjectPool.Get.GetObject(Defines.key_ManaStone);
-        ManaStone++;
+        cubeCount++;
         obj.transform.position = new Vector3(Mathf.Round(enemyPos.x), enemyPos.y, 0);
     }
     /*     */

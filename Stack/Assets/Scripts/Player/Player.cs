@@ -17,14 +17,13 @@ public abstract class Player : MonoBehaviour
     float jumpSpeed = Defines.JUMP_SPEED;
 
     bool isJump = false;
-
     bool isFirstTouch = false;
-    float lastTouchTime = 0.0f;
+    float lastTouchTime;
 
     protected abstract void SetPlayer();
-    public abstract void Skill1();
-    public abstract void Skill2();
-    public abstract void Skill3();
+    public abstract void Skill_1();
+    public abstract void Skill_2();
+    public abstract void Skill_3();
 
     public void Init()
     {
@@ -59,8 +58,8 @@ public abstract class Player : MonoBehaviour
             }
             else if (Input.GetMouseButtonUp(0))
             {
-                anim.SetBool("RunL", false);
-                anim.SetBool("RunR", false);
+                anim.SetBool(Defines.key_RunL, false);
+                anim.SetBool(Defines.key_RunR, false);
             }
         }
     }
@@ -78,7 +77,7 @@ public abstract class Player : MonoBehaviour
         if ((Time.time - lastTouchTime) < 0.25f && !isJump)
         {
             isJump = true;
-            anim.SetBool("Jump", true);
+            anim.SetBool(Defines.key_Jump, true);
             height = transform.position.y + 3f;
         }
         lastTouchTime = Time.time;
@@ -99,56 +98,54 @@ public abstract class Player : MonoBehaviour
 
         if (Mathf.Abs(moveValue) > Vector3.kEpsilon)
         {
-            if (moveValue < 0)
+            Vector3 dir = Vector3.right;
+
+            if (moveValue > 0)
             {
-                Ray ray = new Ray(transform.position, Vector3.left);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, 0.5f))
-                {
-                    if (hit.collider.CompareTag("Ground")) return;
-                }
-
-                transform.Translate(-moveSpeed * Time.deltaTime, 0f, 0f);
-
-                anim.SetBool("RunR", true);
-                anim.SetBool("RunL", false);
+                dir = Vector3.right;
+                anim.SetBool(Defines.key_RunR, true);
+                anim.SetBool(Defines.key_RunL, false);
             }
             else
             {
-                Ray ray = new Ray(transform.position, Vector3.right);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, 0.5f))
-                {
-                    if (hit.collider.CompareTag("Ground")) return;
-                }
-
-                transform.Translate(moveSpeed * Time.deltaTime, 0f, 0f);
-
-                anim.SetBool("RunL", true);
-                anim.SetBool("RunR", false);
+                dir = Vector3.left;
+                anim.SetBool(Defines.key_RunL, true);
+                anim.SetBool(Defines.key_RunR, false);
             }
+
+            Ray ray = new Ray(transform.position, dir);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, 0.5f))
+            {
+                if (hit.collider.CompareTag(Defines.key_Ground))
+                    return;
+            }
+
+            transform.Translate(dir * moveSpeed * Time.deltaTime);
         }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground") || rb.velocity.y == 0)
+        if (collision.gameObject.CompareTag(Defines.key_Ground) || rb.velocity.y == 0)
         {
             isJump = false;
             jumpSpeed = Defines.JUMP_SPEED;
-            anim.SetBool("Jump", false);
+            anim.SetBool(Defines.key_Jump, false);
         }
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Enemy") || other.gameObject.CompareTag("EnemyBullet"))
-            Demage();
+        if (other.gameObject.CompareTag(Defines.key_Enemy) || other.gameObject.CompareTag(Defines.key_EnemyBullet))
+        {
+            Damage(10);
+        }
     }
 
-    void Demage()
+    void Damage(float power)
     {
-        hp--;
+        hp = Mathf.Clamp(hp - power, 0, maxHP);
         InGameManager.Instance.playerHitEvent.Invoke(hp/maxHP);
         if (hp <= 0)
             InGameManager.Instance.GameOver();
