@@ -3,10 +3,11 @@
 public static class Defines
 {
     #region Player
-    public static float JUMP_SPEED = 8f;
-    public static float MOVE_SPEED = 6.5f; 
-    public static float ATTACK_INTERVAL = 0.15f;
-    public static int MAX_BULLET_COUNT = 50;
+    public const float Jump_Height = 3f;
+    public const float JUMP_SPEED = 8f;
+    public const float MOVE_SPEED = 6.5f; 
+    public const float ATTACK_INTERVAL = 0.15f;
+    public const int MAX_BULLET_COUNT = 50;
     #endregion
 
     #region Enemy
@@ -14,13 +15,13 @@ public static class Defines
     #endregion
 
     #region System
-    public static int PLAY_TIME = 180;
-    public static int MAX_MANASTONE = 200;
-    public static float SPAWN_INTERVAL = 2f;
-    public static float WAVE_INTERVAL = 10f;
+    public const int PLAY_TIME = 180;
+    public const int MAX_MANASTONE = 200;
+    public const float SPAWN_INTERVAL = 2f;
+    public const float WAVE_INTERVAL = 10f;
 
-    public static int _Width = 9;
-    public static int _Height = 20;
+    public const int Screen_Width = 9;
+    public const int Screen_Height = 16;
 
     #endregion
 

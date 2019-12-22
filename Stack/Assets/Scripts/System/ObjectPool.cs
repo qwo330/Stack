@@ -47,7 +47,7 @@ public class ObjectPool : MonoBehaviour
         CreatePool(ObjectType.Bullet.ToString(), Max_Bullet_Count);
         CreatePool(ObjectType.EnemyBullet.ToString(), Max_Bullet_Count);
         CreatePool(ObjectType.HitEffect.ToString(), Max_Enemy_Count);
-        CreatePool(ObjectType.Enemy.ToString(), Max_Enemy_Count);
+        //CreatePool(ObjectType.Enemy.ToString(), Max_Enemy_Count);
 
         //ClearEnemys();
         //CreateEnemys(level);
@@ -71,6 +71,7 @@ public class ObjectPool : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             GameObject obj = Instantiate(prefab, transform);
+            obj.name = name;
             obj.SetActive(false);
             stack.Push(obj);
         }

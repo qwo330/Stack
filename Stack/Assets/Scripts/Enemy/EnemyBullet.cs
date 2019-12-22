@@ -12,13 +12,13 @@ public class EnemyBullet : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.transform.CompareTag("Player"))
+        if (other.transform.CompareTag(Defines.key_Player))
             ObjectPool.Get.ReturnObject(gameObject);
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.transform.CompareTag("Boundary"))
+        if (other.transform.CompareTag(Defines.key_Ground))
         {
             ObjectPool.Get.ReturnObject(gameObject);
         }
