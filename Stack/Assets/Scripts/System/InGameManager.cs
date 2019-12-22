@@ -25,6 +25,13 @@ public class InGameManager : Singleton<InGameManager>
 
 
     #endregion
+
+    #region Log
+    public int GetCubeCount;
+    public int KillMonsterCount;
+    public int UseSkillCount;
+    #endregion
+
     public Event<float> playerHitEvent = new Event<float>();
     public GameState CurrentState { get; private set; }
 
@@ -35,11 +42,22 @@ public class InGameManager : Singleton<InGameManager>
     float remainPlayTime;
     int cubeCount;
 
+    void Start()
+    {
+        playerHitEvent.AddListener(ShowPlayerLife);   
+    }
 
     public void Init()
     {
+        LogClear();
         SetGameState(GameState.Ready);
-        playerHitEvent.AddListener(ShowPlayerLife);
+    }
+
+    void LogClear()
+    {
+        GetCubeCount = 0;
+        KillMonsterCount = 0;
+        UseSkillCount = 0;
     }
 
     void ShowPlayerLife(float ratio)
@@ -74,7 +92,7 @@ public class InGameManager : Singleton<InGameManager>
         gameUI.StartStage(level);
 
         SetGameState(GameState.Play);
-        //StartCoroutine(CO_SpawnEnemy());
+        StartCoroutine(CO_SpawnEnemy());
         StartCoroutine(CO_Elapse());
     }
 
@@ -120,13 +138,13 @@ public class InGameManager : Singleton<InGameManager>
                 for (int i = 0; i < 5; i++)
                 {
                     GameObject enemy = ObjectPool.Get.GetObject(Defines.key_Zombie);
-                    Vector3 spawnPos = new Vector3(Random.Range(0, Defines._Width), player.transform.position.y + Defines._Height, 0);
+                    Vector3 spawnPos = new Vector3(Random.Range(0, Defines.Screen_Width), player.transform.position.y + Defines.Screen_Height, 0);
                     enemy.transform.position = spawnPos;
                     enemy.GetComponent<BaseEnemy>().SetEnemy();
                     yield return new WaitForSeconds(Defines.SPAWN_INTERVAL);
                 }
-                yield return new WaitForSeconds(Defines.WAVE_INTERVAL);
             }
+            yield return new WaitForSeconds(Defines.WAVE_INTERVAL);
         }
     }
 

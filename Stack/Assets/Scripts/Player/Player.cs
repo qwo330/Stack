@@ -36,10 +36,13 @@ public abstract class Player : MonoBehaviour
     
     protected IEnumerator CO_Attack()
     {
-        while (InGameManager.Instance.CurrentState == GameState.Play)
+        while (true)
         {
-            GameObject bullet = ObjectPool.Get.GetObject(Defines.key_Bullet);
-            bullet.transform.position = transform.position + bulletOffset;
+            if (InGameManager.Instance.CurrentState == GameState.Play)
+            {
+                Bullet bullet = ObjectPool.Get.GetObject(Defines.key_Bullet).GetComponent<Bullet>();
+                bullet.Init(transform.position + bulletOffset);
+            }
             yield return new WaitForSeconds(Defines.ATTACK_INTERVAL);
         }
     }
@@ -78,7 +81,7 @@ public abstract class Player : MonoBehaviour
         {
             isJump = true;
             anim.SetBool(Defines.key_Jump, true);
-            height = transform.position.y + 3f;
+            height = transform.position.y + Defines.Jump_Height;
         }
         lastTouchTime = Time.time;
     }
@@ -96,11 +99,11 @@ public abstract class Player : MonoBehaviour
         Vector3 touchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         float moveValue = touchPos.x - transform.position.x;
 
-        if (Mathf.Abs(moveValue) > Vector3.kEpsilon)
+        if (Mathf.Abs(moveValue) > Vector3.kEpsilon + 0.1f)
         {
             Vector3 dir = Vector3.right;
 
-            if (moveValue > 0)
+            if (moveValue < 0)
             {
                 dir = Vector3.right;
                 anim.SetBool(Defines.key_RunR, true);
@@ -113,7 +116,7 @@ public abstract class Player : MonoBehaviour
                 anim.SetBool(Defines.key_RunR, false);
             }
 
-            Ray ray = new Ray(transform.position, dir);
+            Ray ray = new Ray(transform.position, -dir);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, 0.5f))
             {
