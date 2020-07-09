@@ -1,6 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public interface IAttackable
+{
+    IEnumerator CO_Attack();
+}
+
 public abstract class BaseEnemy : MonoBehaviour
 {
     [SerializeField]
@@ -12,8 +17,6 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField]
     protected float attackInterval;
 
-    Coroutine attackRoutine;
-
     void FixedUpdate()
     {
         Move();
@@ -24,36 +27,19 @@ public abstract class BaseEnemy : MonoBehaviour
         transform.Translate(0f, -moveSpeed * Time.deltaTime, 0f);
     }
 
-    public void SetEnemy()
-    {
-        hp = maxHP;
-        attackRoutine = StartCoroutine(CO_Attack());
-    }
-
-    public virtual IEnumerator CO_Attack()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(attackInterval);
-
-            GameObject bullet = ObjectPool.Get.GetObject(Defines.key_HitEffect);
-            bullet.transform.position = new Vector3(transform.position.x, transform.position.y - 1f, 0f);
-        }
-    }
-
+    public abstract void SetEnemy();
 
     public void Damage(int power = 1)
     { 
         hp -= power;
-        if (hp == 0)
+        if (hp <= 0)
         {
             Dead();
         }
     }
 
-    void Dead()
+    protected virtual void Dead()
     {
-        StopCoroutine(attackRoutine);
         ShowDeadEffect();
         DropManaStone();
         ObjectPool.Get.ReturnObject(gameObject);

@@ -2,6 +2,7 @@
 
 public enum MagicianSkill
 {
+    Teleport,
     FireBall,
     Explosion,
 }

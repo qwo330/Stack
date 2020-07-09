@@ -3,15 +3,10 @@ using UnityEngine;
 
 public class Zombie : BaseEnemy
 {
-    void Start()
+    public override void SetEnemy()
     {
         maxHP = 5;
         hp = maxHP;
         moveSpeed = 5f;
-    }
-
-    public override IEnumerator CO_Attack()
-    {
-        yield return null;
     }
 }
