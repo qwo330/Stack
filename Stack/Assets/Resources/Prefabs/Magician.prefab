@@ -645,6 +645,9 @@ GameObject:
   - component: {fileID: 2646823918568711819}
   - component: {fileID: 2617225769556915967}
   - component: {fileID: 2678742265533450221}
+  - component: {fileID: 7704283148599028978}
+  - component: {fileID: 5976321050572384988}
+  - component: {fileID: 5886983945129463821}
   m_Layer: 0
   m_Name: Magician
   m_TagString: Player
@@ -728,6 +731,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab787e4f571eba49b16afc1523aa77f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MoveSpeed: 3
+  JumpSpeed: 8
+  AttackInterval: 0.15
+  MaxBulletCount: 50
+  skills:
+  - {fileID: 7704283148599028978}
+  - {fileID: 5976321050572384988}
+  - {fileID: 5886983945129463821}
+--- !u!114 &7704283148599028978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2646823918565551467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0d1bec492766d441841f8146d99d54b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Power: 0
+--- !u!114 &5976321050572384988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2646823918565551467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0190794bd05b5974ba59289c20dce3f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Power: 3
+--- !u!114 &5886983945129463821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2646823918565551467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5916899490507d43aef297649137148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Power: 10
 --- !u!1 &2646823918565552513
 GameObject:
   m_ObjectHideFlags: 0

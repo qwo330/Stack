@@ -2,9 +2,11 @@
 
 public class CameraCtrl : MonoBehaviour
 {
-    Transform player;
+    [SerializeField]
     Vector3 cameraOffset = new Vector3(4f, 5f, -10f);
 
+    Transform player;
+    
     public void Init(Transform player)
     {
         this.player = player;

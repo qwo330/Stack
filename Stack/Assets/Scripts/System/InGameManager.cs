@@ -20,59 +20,70 @@ public class InGameManager : Singleton<InGameManager>
     [SerializeField]
     CameraCtrl cameraCtrl;
 
-    [SerializeField]
-    int StageLevel;
-
-
+    int stageLevel = 1;
     #endregion
 
     #region Log
-    public int GetCubeCount;
     public int KillMonsterCount;
-    public int UseSkillCount;
+    public int UseCubeCount;
     #endregion
 
-    public Event<float> playerHitEvent = new Event<float>();
+    public Event<float> PlayerHitEvent = new Event<float>();
+    public Event EnemyDeadEvent = new Event();
+    public Event UseSkillEvent = new Event();
+
+
     public GameState CurrentState { get; private set; }
 
     public Player player { get; private set; }
     WaitForSeconds updateTime = new WaitForSeconds(1f);
 
-
     float remainPlayTime;
     int cubeCount;
 
+    /*     */
+    Stack<GameObject> cubeStack = new Stack<GameObject>();
+    SortedDictionary<int, GameObject> dic = new SortedDictionary<int, GameObject>();
+    // 배열로??
+
+    #region Set Stage
     void Start()
     {
-        playerHitEvent.AddListener(ShowPlayerLife);   
+        PlayerHitEvent.AddListener(ShowPlayerLife);
+        EnemyDeadEvent.AddListener(EnemyDead);
+        UseSkillEvent.AddListener(UseSkill);
     }
 
     public void Init()
     {
-        LogClear();
         SetGameState(GameState.Ready);
+        LogClear();
+
+        SetPlayer();
+        remainPlayTime = SetPlayTime(stageLevel);
+        gameUI.InitUI(stageLevel);
     }
 
     void LogClear()
     {
-        GetCubeCount = 0;
         KillMonsterCount = 0;
-        UseSkillCount = 0;
+        UseCubeCount = 0;
     }
 
-    void ShowPlayerLife(float ratio)
+    public void StartStage()
     {
-        gameUI.ShowPlayerLife(ratio);
+        SetGameState(GameState.Play);
+        StartCoroutine(CO_SpawnEnemy());
+        StartCoroutine(CO_Elapse());
     }
 
-    void ShowPlayTime(float time)
+    public void SetGameState(GameState state)
     {
-        gameUI.ShowPlayTime(time);
+        CurrentState = state;
     }
 
-    public void StartStage(int level)
+    void SetPlayer()
     {
-        StageLevel = level;
         if (player == null)
         {
             player = FindObjectOfType<Player>();
@@ -84,16 +95,8 @@ public class InGameManager : Singleton<InGameManager>
             }
 
             player.Init();
+            cameraCtrl.Init(player.transform);
         }
-
-        cameraCtrl.Init(player.transform);
-
-        remainPlayTime = SetPlayTime(level);
-        gameUI.StartStage(level);
-
-        SetGameState(GameState.Play);
-        StartCoroutine(CO_SpawnEnemy());
-        StartCoroutine(CO_Elapse());
     }
 
     float SetPlayTime(int level)
@@ -102,27 +105,33 @@ public class InGameManager : Singleton<InGameManager>
         return Defines.PLAY_TIME;
     }
 
-    public void SetGameState(GameState state)
+    void ShowPlayerLife(float ratio)
     {
-        CurrentState = state;
+        gameUI.ShowPlayerLife(ratio);
     }
+
+    void ShowPlayTime(float time)
+    {
+        gameUI.ShowPlayTime(time);
+    }
+    #endregion
 
     IEnumerator CO_Elapse()
     {
         while (remainPlayTime > 0)
         {
-            //if (CurrentState == GameState.Stop)
-            //{
-            //    yield return null;
-            //}
+            if (CurrentState == GameState.Stop || CurrentState == GameState.Ready
+                || CurrentState == GameState.GameOver || CurrentState == GameState.Clear)
+            {
+                yield return null;
+            }
+
             if (CurrentState == GameState.Play)
             {
                 yield return updateTime;
                 remainPlayTime--;
                 ShowPlayTime(remainPlayTime);
             }
-            else
-                yield return null;
         }
 
         GameOver();
@@ -135,10 +144,10 @@ public class InGameManager : Singleton<InGameManager>
         {
             if (CurrentState == GameState.Play)
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 5; i++)  
                 {
                     GameObject enemy = ObjectPool.Get.GetObject(Defines.key_Zombie);
-                    Vector3 spawnPos = new Vector3(Random.Range(0, Defines.Screen_Width), player.transform.position.y + Defines.Screen_Height, 0);
+                    Vector3 spawnPos = new Vector3(Random.Range(0, Defines.Screen_Width + 1), player.transform.position.y + Defines.Screen_Height, 0);
                     enemy.transform.position = spawnPos;
                     enemy.GetComponent<BaseEnemy>().SetEnemy();
                     yield return new WaitForSeconds(Defines.SPAWN_INTERVAL);
@@ -159,57 +168,55 @@ public class InGameManager : Singleton<InGameManager>
     {
         Debug.Log("GAME CLEAR~@@");
         SetGameState(GameState.Clear);
-        
     }
 
-    public bool UseManaStone(int count)
+    void QuitGame()
     {
-        // todo : 화면 상단부터 count 수만큼의 마나 스톤을 제거(하고 스킬 사용)
-        if (cubeCount < count)
+        remainPlayTime = 0;
+        Application.Quit();
+#if !UNITY_EDITOR
+        System.Diagnostics.Process.GetCurrentProcess().Kill();
+#endif
+    }
+
+    #region ManaCube
+    public bool UseManaCube(int count)
+    {
+        // todo : 나중에 얻은 것부터 count 수만큼의 마나 스톤을 제거하고 스킬 발동
+        if (cubeStack.Count < count)
         {
             Debug.Log("자원이 부족합니다.");
             return false;
         }
 
-        //width : 9, height = 20
-        for (int key = (MaxHeight * 10) - 1; key >= 0; key--)
+        while (count != 0)
         {
-            if (count == 0) return false;
-            if (key % 10 == 9) key--;
+            count--;
+            cubeCount--;
 
-            if (dic.ContainsKey(key))
-            {
-                Debug.Log("블럭 제거! key : " + key);
-                GameObject obj;
-                dic.TryGetValue(key, out obj);
-                dic.Remove(key);
-                count--;
-                cubeCount--;
-
-                ObjectPool.Get.ReturnObject(obj);
-                obj = null;
-            }
+            GameObject cube = cubeStack.Pop();
+            cube.GetComponent<ManaCube>().ReturnPool();
+            ObjectPool.Get.ReturnObject(cube);
         }
 
         gameUI.ShowCube(cubeCount);
         return true;
     }
 
-    public void StackManaStone(GameObject manaStone)
+    public void StackManaCube(GameObject manaCube)
     {
-        int key = (int)(manaStone.transform.position.x)
-            + ((int)(Mathf.Round(manaStone.transform.position.y)) * 10);
-        dic.Add(key, manaStone);
+        cubeStack.Push(manaCube);
+        gameUI.ShowCube(++cubeCount);
+    }
+    #endregion
+
+    void EnemyDead()
+    {
+        KillMonsterCount++;
     }
 
-    public void DropManaStone(Vector3 enemyPos)
+    void UseSkill()
     {
-        GameObject obj = ObjectPool.Get.GetObject(Defines.key_ManaStone);
-        cubeCount++;
-        obj.transform.position = new Vector3(Mathf.Round(enemyPos.x), enemyPos.y, 0);
+        UseCubeCount++;
     }
-    /*     */
-    SortedDictionary<int, GameObject> dic = new SortedDictionary<int, GameObject>();
-    // 배열로??
-    public int MaxHeight = 20;
 }

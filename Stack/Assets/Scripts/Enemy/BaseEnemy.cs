@@ -42,10 +42,10 @@ public abstract class BaseEnemy : MonoBehaviour
     }
 
 
-    public void Damage()
-    {
-        hp--;
-        if (hp <= 0)
+    public void Damage(int power = 1)
+    { 
+        hp -= power;
+        if (hp == 0)
         {
             Dead();
         }
@@ -61,8 +61,9 @@ public abstract class BaseEnemy : MonoBehaviour
 
     void DropManaStone()
     {
-        GameObject go = ObjectPool.Get.GetObject(Defines.key_ManaStone);
-        go.transform.position = transform.position;
+        GameObject manaCube = ObjectPool.Get.GetObject(Defines.key_ManaCube);
+        manaCube.transform.position = transform.position;
+        InGameManager.Instance.EnemyDeadEvent.Invoke();
     }
 
     void ShowDeadEffect()
@@ -77,6 +78,11 @@ public abstract class BaseEnemy : MonoBehaviour
         if (other.gameObject.CompareTag(Defines.key_Player) || other.gameObject.CompareTag(Defines.key_PlayerBullet))
         {
             Damage();
+        }
+
+        if (other.CompareTag(Defines.key_Ground))
+        {
+            ObjectPool.Get.ReturnObject(gameObject);
         }
     }
 

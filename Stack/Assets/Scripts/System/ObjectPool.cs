@@ -4,50 +4,53 @@ using UnityEngine;
 public enum ObjectType
 {
     Enemy,
-    ManaStone,
+    ManaCube,
     Bullet,
     EnemyBullet,
     HitEffect,
 }
 
-
 public class ObjectPool : MonoBehaviour
 {
-    const string path = "Prefabs/";
-    public int Max_Enemy_Count = 30;
-    public int Max_ManaStone_Count = 20;//180; // c 9 * r 20
-    public int Max_Bullet_Count = 30;
+    #region Prefab Path
+    const string DefaultPath = "Prefabs/";
+    const string SkillPath = "Prefabs/Skill/";
+    const string MonsterPath = "Prefabs/Monster/";
+
+    #endregion
+
+    int Max_Enemy_Count = 100;
+    int Max_ManaStone_Count = 80; // c 7 * r 11
+    int Max_Bullet_Count = 30;
 
     public static ObjectPool Get { get; private set; }
 
     Dictionary<string, Stack<GameObject>> Pools = new Dictionary<string, Stack<GameObject>>();
 
-    //Queue<GameObject> enemys = new Queue<GameObject>();
-    //Queue<GameObject> manaStones = new Queue<GameObject>();
-    //Queue<GameObject> bullets = new Queue<GameObject>();
-    //Queue<GameObject> enemyBullets = new Queue<GameObject>();
-    //Queue<GameObject> hitEffects = new Queue<GameObject>();
-
-    //private void Start()
-    //{
-    //    createBullets();
-    //    createManaStones();
-    //    createEffects();
-    //}
-
     void Awake()
     {
         Get = this;
         DontDestroyOnLoad(gameObject);
+
+        // test code
+        Init(1);
     }
 
     public void Init(int level)
     {
-        CreatePool(ObjectType.ManaStone.ToString(), Max_ManaStone_Count);
-        CreatePool(ObjectType.Bullet.ToString(), Max_Bullet_Count);
-        CreatePool(ObjectType.EnemyBullet.ToString(), Max_Bullet_Count);
-        CreatePool(ObjectType.HitEffect.ToString(), Max_Enemy_Count);
-        //CreatePool(ObjectType.Enemy.ToString(), Max_Enemy_Count);
+        CreatePool(DefaultPath, ObjectType.ManaCube.ToString(), Max_ManaStone_Count);
+        CreatePool(DefaultPath, ObjectType.HitEffect.ToString(), Max_Enemy_Count);
+
+        CreatePool(DefaultPath, ObjectType.Bullet.ToString(), Max_Bullet_Count);
+        CreatePool(DefaultPath, ObjectType.EnemyBullet.ToString(), Max_Bullet_Count);
+        
+        CreatePool(MonsterPath, Defines.key_Zombie, Max_Enemy_Count);
+        CreatePool(MonsterPath, Defines.key_Ghost, Max_Enemy_Count);
+        CreatePool(MonsterPath, Defines.key_Dragon, Max_Enemy_Count);
+
+        CreatePool(SkillPath, MagicianSkill.Explosion.ToString(), 5);
+        CreatePool(SkillPath, MagicianSkill.FireBall.ToString(), 5);
+
 
         //ClearEnemys();
         //CreateEnemys(level);
@@ -55,7 +58,7 @@ public class ObjectPool : MonoBehaviour
         //SetStage(level);
     }
 
-    public void CreatePool(string name, int count = 32)
+    public void CreatePool(string path, string name, int count = 32)
     {
         Stack<GameObject> stack;
 
@@ -68,9 +71,12 @@ public class ObjectPool : MonoBehaviour
         }
 
         GameObject prefab = Resources.Load<GameObject>(path + name);
+        Transform parent = new GameObject(name).transform;
+        parent.parent = transform;
+
         for (int i = 0; i < count; i++)
         {
-            GameObject obj = Instantiate(prefab, transform);
+            GameObject obj = Instantiate(prefab, parent);
             obj.name = name;
             obj.SetActive(false);
             stack.Push(obj);
@@ -79,13 +85,16 @@ public class ObjectPool : MonoBehaviour
 
     public GameObject GetObject(string name)
     {
-        if (Pools.ContainsKey(name) == false)
-            CreatePool(name);
+        //if (Pools.ContainsKey(name) == false)
+        //    CreatePool(name);
 
         var stack = Pools[name];
 
         if (stack.Count == 0)
-            CreatePool(name);
+        {
+            Debug.LogWarning(name + " is not enough");
+            //CreatePool(name);
+        }
 
         GameObject obj = stack.Pop();
         obj.SetActive(true);

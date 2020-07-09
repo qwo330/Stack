@@ -40,17 +40,11 @@ public class UI_Ingame : MonoBehaviour
         }
     }
 
-    public void StartStage(int level)
+    public void InitUI(int level)
     {
-        // todo : level에 따른 plattime 세팅?
         ShowPlayTime(Defines.PLAY_TIME);
         ShowCube(0);
         ShowPlayerLife(1);
-    }
-
-    public void ShowPlayerLife(float ratio)
-    {
-        imgLife.fillAmount = ratio;
     }
 
     public void ShowPlayTime(float time)
@@ -61,6 +55,11 @@ public class UI_Ingame : MonoBehaviour
     public void ShowCube(int count)
     {
         txtCube.text = count.ToString();
+    }
+
+    public void ShowPlayerLife(float ratio)
+    {
+        imgLife.fillAmount = ratio;
     }
 
     public void OnClickPause()
@@ -78,19 +77,16 @@ public class UI_Ingame : MonoBehaviour
 
     void Skill_1()
     {
-        Debug.Log("Call Skill 1");
         InGameManager.Instance.player.Skill_1();
     }
 
     void Skill_2()
     {
-        Debug.Log("Call Skill 2");
         InGameManager.Instance.player.Skill_2();
     }
 
     void Skill_3()
     {
-        Debug.Log("Call Skill 3");
         InGameManager.Instance.player.Skill_3();
     }
 }

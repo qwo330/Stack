@@ -5,20 +5,37 @@ using UnityEngine.EventSystems;
 
 public abstract class Player : MonoBehaviour
 {
+    [SerializeField]
+    float MoveSpeed = 3f;
+
+    [SerializeField]
+    float JumpSpeed = 8f;
+
+    public float JumpHeight { get { return 3; } }
+
+    [SerializeField]
+    float AttackInterval = 0.15f;
+
+    [SerializeField]
+    int MaxBulletCount = 50;
+
+    [SerializeField]
+    protected BaseSkill[] skills;
+
     Rigidbody rb;
     Animator anim;
-
-    public float maxHP { get; protected set; }
-    public float hp { get; protected set; }
-
-    protected Vector3 bulletOffset = new Vector3(0f, 1f, 0f);
-    float height = 0f;
-    float moveSpeed = Defines.MOVE_SPEED;
-    float jumpSpeed = Defines.JUMP_SPEED;
-
+    
     bool isJump = false;
     bool isFirstTouch = false;
+    float height = 0f;
     float lastTouchTime;
+    float jumpSpeed;
+
+
+    public float MaxHP { get; protected set; }
+    public float Hp { get; protected set; }
+
+    protected Vector3 bulletOffset = new Vector3(0f, 1f, 0f);
 
     protected abstract void SetPlayer();
     public abstract void Skill_1();
@@ -43,7 +60,7 @@ public abstract class Player : MonoBehaviour
                 Bullet bullet = ObjectPool.Get.GetObject(Defines.key_Bullet).GetComponent<Bullet>();
                 bullet.Init(transform.position + bulletOffset);
             }
-            yield return new WaitForSeconds(Defines.ATTACK_INTERVAL);
+            yield return new WaitForSeconds(AttackInterval);
         }
     }
 
@@ -81,7 +98,7 @@ public abstract class Player : MonoBehaviour
         {
             isJump = true;
             anim.SetBool(Defines.key_Jump, true);
-            height = transform.position.y + Defines.Jump_Height;
+            height = transform.position.y + JumpHeight;
         }
         lastTouchTime = Time.time;
     }
@@ -89,9 +106,9 @@ public abstract class Player : MonoBehaviour
     void Jump()
     {
         if (transform.position.y < height)
-            transform.Translate(0, jumpSpeed * Time.deltaTime, 0);
+            transform.Translate(0, JumpSpeed * Time.deltaTime, 0);
         else
-            jumpSpeed = 0;
+            JumpSpeed = 0;
     }
 
     void Move()
@@ -103,7 +120,7 @@ public abstract class Player : MonoBehaviour
         {
             Vector3 dir = Vector3.right;
 
-            if (moveValue < 0)
+            if (moveValue > 0)
             {
                 dir = Vector3.right;
                 anim.SetBool(Defines.key_RunR, true);
@@ -116,7 +133,8 @@ public abstract class Player : MonoBehaviour
                 anim.SetBool(Defines.key_RunR, false);
             }
 
-            Ray ray = new Ray(transform.position, -dir);
+            Vector3 pos = transform.position;
+            Ray ray = new Ray(pos, dir);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, 0.5f))
             {
@@ -124,7 +142,9 @@ public abstract class Player : MonoBehaviour
                     return;
             }
 
-            transform.Translate(dir * moveSpeed * Time.deltaTime);
+            float x = pos.x + (dir.x * MoveSpeed * Time.deltaTime);
+            x = Mathf.Clamp(x, 0f, Defines.Screen_Width);
+            transform.position = new Vector3(x, pos.y, pos.z);
         }
     }
 
@@ -133,7 +153,7 @@ public abstract class Player : MonoBehaviour
         if (collision.gameObject.CompareTag(Defines.key_Ground) || rb.velocity.y == 0)
         {
             isJump = false;
-            jumpSpeed = Defines.JUMP_SPEED;
+            jumpSpeed = JumpSpeed;
             anim.SetBool(Defines.key_Jump, false);
         }
     }
@@ -148,9 +168,9 @@ public abstract class Player : MonoBehaviour
 
     void Damage(float power)
     {
-        hp = Mathf.Clamp(hp - power, 0, maxHP);
-        InGameManager.Instance.playerHitEvent.Invoke(hp/maxHP);
-        if (hp <= 0)
+        Hp = Mathf.Clamp(Hp - power, 0, MaxHP);
+        InGameManager.Instance.PlayerHitEvent.Invoke(Hp / MaxHP);
+        if (Hp <= 0)
             InGameManager.Instance.GameOver();
     }
 }
