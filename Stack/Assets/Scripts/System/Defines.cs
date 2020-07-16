@@ -8,8 +8,8 @@ public static class Defines
 
     #region System
     public const int PLAY_TIME = 180;
-    public const float SPAWN_INTERVAL = 0.7f;
-    public const float WAVE_INTERVAL = 2f;
+    public const float SPAWN_INTERVAL = 1.1f;
+    public const float WAVE_INTERVAL = 3f;
 
     public const int Screen_Width = 6;
     public const int Screen_Height = 10;

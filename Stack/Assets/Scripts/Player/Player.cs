@@ -25,12 +25,10 @@ public abstract class Player : MonoBehaviour
     Rigidbody rb;
     Animator anim;
     
-    bool isJump = false;
+    bool isJumping = false;
     bool isFirstTouch = false;
     float height = 0f;
     float lastTouchTime;
-    float jumpSpeed;
-
 
     public float MaxHP { get; protected set; }
     public float Hp { get; protected set; }
@@ -86,7 +84,7 @@ public abstract class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (isJump)
+        if (isJumping)
         {
             Jump();
         }
@@ -94,9 +92,10 @@ public abstract class Player : MonoBehaviour
 
     void CheckJump()
     {
-        if ((Time.time - lastTouchTime) < 0.25f && !isJump)
+        if ((Time.time - lastTouchTime) < 0.25f && !isJumping)
         {
-            isJump = true;
+            Debug.Log("jumping");
+            isJumping = true;
             anim.SetBool(Defines.key_Jump, true);
             height = transform.position.y + JumpHeight;
         }
@@ -150,10 +149,9 @@ public abstract class Player : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag(Defines.key_Ground) || rb.velocity.y == 0)
+        if (collision.gameObject.CompareTag(Defines.key_Ground))//|| rb.velocity.y == 0)
         {
-            isJump = false;
-            jumpSpeed = JumpSpeed;
+            isJumping = false;
             anim.SetBool(Defines.key_Jump, false);
         }
     }

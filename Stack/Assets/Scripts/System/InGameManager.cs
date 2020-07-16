@@ -20,6 +20,9 @@ public class InGameManager : Singleton<InGameManager>
     [SerializeField]
     CameraCtrl cameraCtrl;
 
+    [SerializeField]
+    LevelManager levelMgr;
+
     int stageLevel = 1;
     #endregion
 
@@ -31,6 +34,7 @@ public class InGameManager : Singleton<InGameManager>
     public Event<float> PlayerHitEvent = new Event<float>();
     public Event EnemyDeadEvent = new Event();
     public Event UseSkillEvent = new Event();
+    public Event GameClearEvent = new Event();
 
 
     public GameState CurrentState { get; private set; }
@@ -47,11 +51,17 @@ public class InGameManager : Singleton<InGameManager>
     // 배열로??
 
     #region Set Stage
+    void Awake()
+    {
+        levelMgr.gameMgr = this;
+    }
+
     void Start()
     {
         PlayerHitEvent.AddListener(ShowPlayerLife);
         EnemyDeadEvent.AddListener(EnemyDead);
         UseSkillEvent.AddListener(UseSkill);
+        GameClearEvent.AddListener(Clear);
     }
 
     public void Init()
@@ -73,7 +83,7 @@ public class InGameManager : Singleton<InGameManager>
     public void StartStage()
     {
         SetGameState(GameState.Play);
-        StartCoroutine(CO_SpawnEnemy());
+        levelMgr.Init(stageLevel);
         StartCoroutine(CO_Elapse());
     }
 
@@ -137,26 +147,6 @@ public class InGameManager : Singleton<InGameManager>
         GameOver();
     }
 
-    IEnumerator CO_SpawnEnemy()
-    {
-        // todo :  level에 따른 몬스터 타입 변경 및 스폰 속도, 개수 조절 등 난이도 설정 필요
-        while (true)
-        {
-            if (CurrentState == GameState.Play)
-            {
-                for (int i = 0; i < 5; i++)  
-                {
-                    GameObject enemy = ObjectPool.Get.GetObject(Defines.key_Zombie);
-                    Vector3 spawnPos = new Vector3(Random.Range(0, Defines.Screen_Width + 1), player.transform.position.y + Defines.Screen_Height, 0);
-                    enemy.transform.position = spawnPos;
-                    enemy.GetComponent<BaseEnemy>().SetEnemy();
-                    yield return new WaitForSeconds(Defines.SPAWN_INTERVAL);
-                }
-            }
-            yield return new WaitForSeconds(Defines.WAVE_INTERVAL);
-        }
-    }
-
     public void GameOver()
     {
         Debug.Log("GAME OVER!!");
@@ -195,7 +185,6 @@ public class InGameManager : Singleton<InGameManager>
             cubeCount--;
 
             GameObject cube = cubeStack.Pop();
-            cube.GetComponent<ManaCube>().ReturnPool();
             ObjectPool.Get.ReturnObject(cube);
         }
 

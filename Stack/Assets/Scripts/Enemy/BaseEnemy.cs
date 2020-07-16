@@ -17,6 +17,13 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField]
     protected float attackInterval;
 
+    //bool isDead = false;
+
+    //void OnDisable()
+    //{
+    //    isDead = false;
+    //}
+
     void FixedUpdate()
     {
         Move();
@@ -27,12 +34,12 @@ public abstract class BaseEnemy : MonoBehaviour
         transform.Translate(0f, -moveSpeed * Time.deltaTime, 0f);
     }
 
-    public abstract void SetEnemy();
+    public abstract void SetEnemy(int level);
 
     public void Damage(int power = 1)
     { 
         hp -= power;
-        if (hp <= 0)
+        if (hp <= 0/* && !isDead*/)
         {
             Dead();
         }
@@ -40,6 +47,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void Dead()
     {
+        //isDead = true;
         ShowDeadEffect();
         DropManaStone();
         ObjectPool.Get.ReturnObject(gameObject);
@@ -61,7 +69,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag(Defines.key_Player) || other.gameObject.CompareTag(Defines.key_PlayerBullet))
+        if (/*!isDead &&*/ other.gameObject.CompareTag(Defines.key_PlayerBullet))
         {
             Damage();
         }

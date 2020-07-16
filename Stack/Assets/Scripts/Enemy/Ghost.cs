@@ -5,9 +5,9 @@ public class Ghost : BaseEnemy, IAttackable
 {
     Coroutine attackRoutine;
 
-    public override void SetEnemy()
+    public override void SetEnemy(int level)
     {
-        maxHP = 3;
+        maxHP = 3 + (int)(level * 0.25f);
         hp = maxHP;
         moveSpeed = 1.5f;
         attackInterval = 4f;
@@ -21,7 +21,7 @@ public class Ghost : BaseEnemy, IAttackable
         {
             yield return new WaitForSeconds(attackInterval);
 
-            GameObject bullet = ObjectPool.Get.GetObject(Defines.key_HitEffect);
+            GameObject bullet = ObjectPool.Get.GetObject(Defines.key_EnemyBullet);
             bullet.transform.position = new Vector3(transform.position.x, transform.position.y - 1f, 0f);
         }
     }

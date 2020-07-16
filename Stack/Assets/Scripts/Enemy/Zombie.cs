@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class Zombie : BaseEnemy
 {
-    public override void SetEnemy()
+    public override void SetEnemy(int level)
     {
-        maxHP = 5;
+        maxHP = 5 + level;
         hp = maxHP;
         moveSpeed = 5f;
     }

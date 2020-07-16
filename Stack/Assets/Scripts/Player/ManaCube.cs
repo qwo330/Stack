@@ -5,39 +5,60 @@ using UnityEngine;
 public class ManaCube : MonoBehaviour
 {
     bool isGround;
+    WaitForFixedUpdate waitFixedUpdate;
 
-    public void ReturnPool()
+    void OnEnable()
+    {
+        StartCoroutine(DropCube());
+    }
+
+    void OnDisable()
     {
         isGround = false;
+        StopCoroutine(DropCube());
     }
 
-    void FixedUpdate()
+    public IEnumerator DropCube()
     {
-        if (!isGround)
+        while(!isGround)
+        {
             transform.Translate(Vector3.down * 6f * Time.deltaTime);
+            yield return waitFixedUpdate;
+        }
+
+        Vector3 pos = transform.position;
+        transform.position = new Vector3(pos.x, Mathf.Round(pos.y), 0);
+        InGameManager.Instance.StackManaCube(gameObject);
     }
 
-    void SwitchWithPlayer(Transform player)
+    void PlaceUnderPlayer(Transform player)
     {
         if (!isGround)
-            player.position += new Vector3(0, 2f, 0);
+        {
+            Vector3 playerPos = player.position;
+            Vector3 cubePos = transform.position;
+
+            if (playerPos.y < cubePos.y)
+            {
+                player.position = cubePos;
+                //player.position = new Vector3(playerPos.x, cubePos.y, cubePos.z);
+                transform.position.Set(cubePos.x, playerPos.y, playerPos.z);        
+            }
+        }
     }
 
-    // 플레이어와 y 포지션 비교해서 상단 접촉시 바닥 처리 & 하단 접촉시 통과 처리로 수정
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.transform.CompareTag("Player"))
+        if (!isGround)
         {
-            SwitchWithPlayer(collision.transform);
-        }
-        else if (collision.transform.CompareTag("Ground"))
-        {
-            if (isGround) return;
-
-            isGround = true;
-            Vector3 pos = transform.position;
-            transform.position = new Vector3(pos.x, Mathf.Round(pos.y), 0);
-            InGameManager.Instance.StackManaCube(gameObject);
+            if (collision.transform.CompareTag(Defines.key_Ground))
+            {
+                isGround = true;
+            }
+            else if(collision.transform.CompareTag(Defines.key_Player))
+            {
+                PlaceUnderPlayer(collision.transform);
+            }
         }
     }
 }

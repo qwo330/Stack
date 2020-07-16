@@ -22,7 +22,7 @@ public class Teleport : BaseSkill
     void ShowSkillEffect(Vector3 position)
     {
         HitEffect effect = ObjectPool.Get.GetObject(Defines.key_HitEffect).GetComponent<HitEffect>();
-        effect.transform.position = transform.position + new Vector3(0, 0, 1f);
+        effect.transform.position = position + Vector3.back;
         effect.ShowEffect();
     }
 }

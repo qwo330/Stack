@@ -10,6 +10,8 @@ public class FireBall : BaseSkill
 
     protected override IEnumerator CO_Action(GameObject skillObject)
     {
+        skillObject.GetComponent<SkillObject>().Power = Power;
+
         Transform trans = skillObject.transform;
         trans.position = transform.position + Vector3.up * offset;
 

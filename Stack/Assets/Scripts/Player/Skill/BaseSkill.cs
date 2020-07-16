@@ -12,23 +12,4 @@ public abstract class BaseSkill : MonoBehaviour
     }
 
     protected abstract IEnumerator CO_Action(GameObject skillObject);
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag(Defines.key_Enemy))
-        {
-            BaseEnemy enemy = other.GetComponent<BaseEnemy>();
-            enemy.Damage(Power);
-        }
-    }
-
-    void OnTriggerStay(Collider other)
-    {
-        
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        
-    }
 }
