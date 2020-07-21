@@ -7,6 +7,12 @@ public class UI_Ingame : MonoBehaviour
 {
     #region Inspector
     [SerializeField]
+    GameObject PauseWindow;
+
+    [SerializeField]
+    Text GuildeText;
+
+    [SerializeField]
     Text txtTime;
 
     [SerializeField]
@@ -23,6 +29,7 @@ public class UI_Ingame : MonoBehaviour
     #endregion
 
     float skillSliderValue;
+    WaitForSeconds showTextTime = new WaitForSeconds(2f);
 
     void Update()
     {
@@ -40,11 +47,21 @@ public class UI_Ingame : MonoBehaviour
         }
     }
 
+    public void OnSlideSkill()
+    {
+        skillSliderValue = skillSlider.value;
+    }
+
     public void InitUI(int level)
     {
         ShowPlayTime(Defines.PLAY_TIME);
         ShowCube(0);
         ShowPlayerLife(1);
+
+        if (level % 4 == 0) // Boss Stage
+        {
+            ShowText("Boss has appeared!");
+        }
     }
 
     public void ShowPlayTime(float time)
@@ -64,15 +81,41 @@ public class UI_Ingame : MonoBehaviour
 
     public void OnClickPause()
     {
-        GameState state = InGameManager.Instance.CurrentState == GameState.Play ? GameState.Stop : GameState.Play;
+        GameState state = GameState.Stop;
         InGameManager.Instance.SetGameState(state);
-
-        // todo : pause 팝업
+        PauseWindow.SetActive(true);
     }
 
-    public void OnSlideSkill()
+    public void OnClickContinue()
     {
-        skillSliderValue = skillSlider.value;
+        GameState state = GameState.Play;
+        InGameManager.Instance.SetGameState(state);
+        PauseWindow.SetActive(false);
+    }
+
+    public void OnClickRestart()
+    {
+        GameState state = GameState.Ready;
+        InGameManager.Instance.StartStage();
+    }
+
+    public void OnClickQuit()
+    {
+        InGameManager.Instance.QuitGame();
+    }
+
+    public void ShowText(string text)
+    {
+        StartCoroutine(CO_ShowText(text));
+    }
+
+    IEnumerator CO_ShowText(string text)
+    {
+        GuildeText.text = text;
+        GuildeText.gameObject.SetActive(true);
+
+        yield return showTextTime;
+        GuildeText.gameObject.SetActive(false);
     }
 
     void Skill_1()

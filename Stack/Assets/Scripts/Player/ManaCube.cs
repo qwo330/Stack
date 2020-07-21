@@ -4,26 +4,33 @@ using UnityEngine;
 
 public class ManaCube : MonoBehaviour
 {
-    bool isGround;
+    [SerializeField]
+    BoxCollider coll;
+
+    public bool isGround;
     WaitForFixedUpdate waitFixedUpdate;
 
     void OnEnable()
     {
+        isGround = false;
+        //coll.isTrigger = true;
         StartCoroutine(DropCube());
     }
 
     void OnDisable()
     {
-        isGround = false;
         StopCoroutine(DropCube());
     }
 
     public IEnumerator DropCube()
     {
-        while(!isGround)
+        while (!isGround)
         {
-            transform.Translate(Vector3.down * 6f * Time.deltaTime);
-            yield return waitFixedUpdate;
+            while (InGameManager.Instance.CheckPlaying())
+            {
+                transform.Translate(Vector3.down * 6f * Time.deltaTime);
+                yield return waitFixedUpdate;
+            }
         }
 
         Vector3 pos = transform.position;
@@ -54,6 +61,7 @@ public class ManaCube : MonoBehaviour
             if (collision.transform.CompareTag(Defines.key_Ground))
             {
                 isGround = true;
+                //coll.isTrigger = false;
             }
             else if(collision.transform.CompareTag(Defines.key_Player))
             {
@@ -61,4 +69,6 @@ public class ManaCube : MonoBehaviour
             }
         }
     }
+
+
 }

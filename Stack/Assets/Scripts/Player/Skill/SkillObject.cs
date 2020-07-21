@@ -12,7 +12,7 @@ public class SkillObject : MonoBehaviour
         if (other.CompareTag(Defines.key_Enemy))
         {
             BaseEnemy enemy = other.GetComponent<BaseEnemy>();
-            enemy.Damage(Power);
+            enemy.Hit(Power);
         }
     }
 }

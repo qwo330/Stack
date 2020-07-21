@@ -9,7 +9,7 @@ public class Teleport : BaseSkill
         Player player = GetComponent<Player>();
 
         Vector3 curPosition = transform.position;
-        Vector3 newPosition = curPosition + Vector3.up * player.JumpHeight * 2;
+        Vector3 newPosition = curPosition + Vector3.up * Power;
 
         ShowSkillEffect(curPosition);
         yield return null;

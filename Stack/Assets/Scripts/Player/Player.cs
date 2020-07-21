@@ -5,13 +5,8 @@ using UnityEngine.EventSystems;
 
 public abstract class Player : MonoBehaviour
 {
-    [SerializeField]
-    float MoveSpeed = 3f;
-
-    [SerializeField]
-    float JumpSpeed = 8f;
-
-    public float JumpHeight { get { return 3; } }
+    float MoveSpeed = 5f;
+    float JumpPower = 8f;
 
     [SerializeField]
     float AttackInterval = 0.15f;
@@ -26,8 +21,6 @@ public abstract class Player : MonoBehaviour
     Animator anim;
     
     bool isJumping = false;
-    bool isFirstTouch = false;
-    float height = 0f;
     float lastTouchTime;
 
     public float MaxHP { get; protected set; }
@@ -40,20 +33,24 @@ public abstract class Player : MonoBehaviour
     public abstract void Skill_2();
     public abstract void Skill_3();
 
-    public void Init()
+    public void GetPlayer()
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
+    }
 
+    public void Init()
+    {
         SetPlayer();
+        StopCoroutine(CO_Attack());
         StartCoroutine(CO_Attack());
     }
-    
+
     protected IEnumerator CO_Attack()
     {
         while (true)
         {
-            if (InGameManager.Instance.CurrentState == GameState.Play)
+            if (InGameManager.Instance.CheckPlaying())
             {
                 Bullet bullet = ObjectPool.Get.GetObject(Defines.key_Bullet).GetComponent<Bullet>();
                 bullet.Init(transform.position + bulletOffset);
@@ -82,34 +79,17 @@ public abstract class Player : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
-    {
-        if (isJumping)
-        {
-            Jump();
-        }
-    }
-
     void CheckJump()
     {
         if ((Time.time - lastTouchTime) < 0.25f && !isJumping)
         {
-            Debug.Log("jumping");
             isJumping = true;
             anim.SetBool(Defines.key_Jump, true);
-            height = transform.position.y + JumpHeight;
+            rb.AddForce(Vector3.up * JumpPower, ForceMode.Impulse);
         }
         lastTouchTime = Time.time;
     }
-
-    void Jump()
-    {
-        if (transform.position.y < height)
-            transform.Translate(0, JumpSpeed * Time.deltaTime, 0);
-        else
-            JumpSpeed = 0;
-    }
-
+    
     void Move()
     {
         Vector3 touchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -149,10 +129,14 @@ public abstract class Player : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag(Defines.key_Ground))//|| rb.velocity.y == 0)
+        if (collision.gameObject.CompareTag(Defines.key_Ground))
         {
-            isJumping = false;
-            anim.SetBool(Defines.key_Jump, false);
+            var cube = collision.gameObject.GetComponent<ManaCube>();
+            if (cube == null || cube.isGround)
+            {
+                isJumping = false;
+                anim.SetBool(Defines.key_Jump, false);
+            }
         }
     }
 
@@ -160,12 +144,14 @@ public abstract class Player : MonoBehaviour
     {
         if (other.gameObject.CompareTag(Defines.key_Enemy) || other.gameObject.CompareTag(Defines.key_EnemyBullet))
         {
-            Damage(10);
+            Hit(10);
         }
     }
 
-    void Damage(float power)
+    void Hit(float power)
     {
+        Debug.Log("get damage");
+
         Hp = Mathf.Clamp(Hp - power, 0, MaxHP);
         InGameManager.Instance.PlayerHitEvent.Invoke(Hp / MaxHP);
         if (Hp <= 0)

@@ -15,10 +15,13 @@ public class Bullet : MonoBehaviour
 
     void FixedUpdate()
     {
-        transform.Translate(0f, moveSpeed * Time.deltaTime, 0f);
+        if (InGameManager.Instance.CheckPlaying())
+        {
+            transform.Translate(0f, moveSpeed * Time.deltaTime, 0f);
 
-        if (transform.position.y > ReturnY)
-            ObjectPool.Get.ReturnObject(gameObject);
+            if (transform.position.y > ReturnY)
+                ObjectPool.Get.ReturnObject(gameObject);
+        }
     }
 
     void OnTriggerEnter(Collider other)

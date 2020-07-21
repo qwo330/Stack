@@ -7,7 +7,7 @@ public class Ghost : BaseEnemy, IAttackable
 
     public override void SetEnemy(int level)
     {
-        maxHP = 3 + (int)(level * 0.25f);
+        maxHP = 1 + (int)(level * 0.5f);
         hp = maxHP;
         moveSpeed = 1.5f;
         attackInterval = 4f;
@@ -17,7 +17,7 @@ public class Ghost : BaseEnemy, IAttackable
 
     public IEnumerator CO_Attack()
     {
-        while (true)
+        while (InGameManager.Instance.CheckPlaying())
         {
             yield return new WaitForSeconds(attackInterval);
 

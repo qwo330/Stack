@@ -5,8 +5,8 @@ public class Zombie : BaseEnemy
 {
     public override void SetEnemy(int level)
     {
-        maxHP = 5 + level;
+        maxHP = 3 + level;
         hp = maxHP;
-        moveSpeed = 5f;
+        moveSpeed = 3f;
     }
 }

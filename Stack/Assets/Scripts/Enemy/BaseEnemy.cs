@@ -31,12 +31,13 @@ public abstract class BaseEnemy : MonoBehaviour
 
     void Move()
     {
-        transform.Translate(0f, -moveSpeed * Time.deltaTime, 0f);
+        if (InGameManager.Instance.CheckPlaying())
+            transform.Translate(0f, -moveSpeed * Time.deltaTime, 0f);
     }
 
     public abstract void SetEnemy(int level);
 
-    public void Damage(int power = 1)
+    public void Hit(int power = 1)
     { 
         hp -= power;
         if (hp <= 0/* && !isDead*/)
@@ -71,7 +72,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         if (/*!isDead &&*/ other.gameObject.CompareTag(Defines.key_PlayerBullet))
         {
-            Damage();
+            Hit();
         }
 
         if (other.CompareTag(Defines.key_Ground))
