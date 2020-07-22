@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// level 1: only zombie
-/// level 2: zombei & ghost
-/// level 3: zombei & ghost
-/// level 4: boss dragon
+/// level 1: only zombie 1 ~ 3
+/// level 2: zombei & ghost 2 ~ 4
+/// level 3: zombei & ghost 3 ~ 5
+/// level 4: + boss dragon
 /// </summary>
 
 public class LevelManager : MonoBehaviour
@@ -17,50 +17,113 @@ public class LevelManager : MonoBehaviour
     [SerializeField]
     DestinationLine destinationLine;
 
+    int destinationHeight;
+
     int stageLevel;
-    int destinationHeight = 20;
+    int minSpawnCount, maxSpawnCount;
 
     float prevSpawnX;
     float ZombieRatio, GhostRatio;
 
+    WaitForSeconds spawnInterval;
+    Stack<GameObject> SpawnedEnemys = new Stack<GameObject>();
+    Coroutine enemySpawnCoroutine;
 
-    WaitForSeconds spawnInterval, waveInterval;
+    void Start()
+    {
+        InGameManager.Instance.GameClearEvent.AddListener(ClearGame);
+    }
 
     public void Init(int level)
     {
+        Debug.Log(" ====== Level Init =======");
         SetLevel(level);
-        StartCoroutine(CO_SpawnEnemy());
+        SpawnEnemyLoop();
+        //StopCoroutine(CO_SpawnEnemy());
+        //StartCoroutine(CO_SpawnEnemy());
     }
 
     public void SetLevel(int level)
     {
         stageLevel = level;
-        destinationLine.SetPosition(20 + level);
+        destinationHeight = Defines.Screen_Height + level;
+        destinationLine.SetPosition(destinationHeight);
         float levelRate = (level - 1) * 0.2f;
+
+        minSpawnCount = stageLevel % 4;
+        maxSpawnCount = Mathf.Min(minSpawnCount + 2, Defines.Screen_Width);
 
         ZombieRatio = 1 - levelRate;
         GhostRatio = levelRate;
 
-        spawnInterval = new WaitForSeconds(Defines.SPAWN_INTERVAL - (levelRate * 0.5f));
-        waveInterval = new WaitForSeconds(Defines.WAVE_INTERVAL - levelRate);
+        spawnInterval = new WaitForSeconds(Defines.SPAWN_INTERVAL);
     }
 
-    IEnumerator CO_SpawnEnemy()
+    void SpawnEnemyLoop()
+    //IEnumerator CO_SpawnEnemy()
     {
         // todo :  level에 따른 몬스터 타입 변경 및 스폰 속도, 개수 조절 등 난이도 설정 필요
-        while (InGameManager.Instance.CurrentState == GameState.Play)
+        System.Action loopMethod = () =>
         {
-            for (int i = 0; i < 5; i++)
-            {
-                GameObject enemy = GetRandomEnemy();
-                Vector3 spawnPos = GetRandomSpawnPosition();
-                enemy.transform.position = spawnPos;
-                enemy.GetComponent<BaseEnemy>().SetEnemy(stageLevel);
-                yield return spawnInterval;
-            }
+            int spawnCount = Random.Range(minSpawnCount, maxSpawnCount);
 
-            yield return waveInterval;
+            for (int i = 0; i < spawnCount; i++)
+            {
+                SpawnEnemy();
+            }
+        };
+
+        enemySpawnCoroutine = StartCoroutine(CO_PlayLoop(loopMethod));
+
+
+
+
+        //if (InGameManager.Instance.CheckPlaying())
+        //{
+        //    while (InGameManager.Instance.CheckPlaying())
+        //    {
+        //        yield return spawnInterval;
+        //        int spawnCount = Random.Range(minSpawnCount, maxSpawnCount);
+
+        //        for (int i = 0; i < spawnCount; i++)
+        //        {
+        //            SpawnEnemy();
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    while (true)
+        //        yield return null;
+        //}
+    }
+
+    public IEnumerator CO_PlayLoop(System.Action method)
+    {
+        while (true)
+        {
+            bool isPlaying = InGameManager.Instance.CheckPlaying();
+
+            if (isPlaying)
+            {
+                yield return spawnInterval;
+                method();
+            }
+            else
+            {
+                yield return null;
+            }
         }
+    }
+
+    void SpawnEnemy()
+    {
+        GameObject enemy = GetRandomEnemy();
+        Vector3 spawnPos = GetRandomSpawnPosition();
+        enemy.transform.position = spawnPos;
+        enemy.GetComponent<BaseEnemy>().SetEnemy(stageLevel);
+
+        SpawnedEnemys.Push(enemy);
     }
 
     GameObject GetRandomEnemy()
@@ -91,5 +154,21 @@ public class LevelManager : MonoBehaviour
         prevSpawnX = newX;
         Vector3 result = new Vector3(newX, destinationHeight, 0);
         return result;
+    }
+
+    void ClearGame()
+    {
+        ReturnAllEnemys();
+        if (enemySpawnCoroutine != null)
+            StopCoroutine(enemySpawnCoroutine);
+    }
+
+    void ReturnAllEnemys()
+    {
+        for (int i = 0; i < SpawnedEnemys.Count; i++)
+        {
+            var obj = SpawnedEnemys.Pop();
+            ObjectPool.Get.ReturnObject(obj);
+        }
     }
 }

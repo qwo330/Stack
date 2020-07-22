@@ -1068,8 +1068,8 @@ GameObject:
   m_Component:
   - component: {fileID: 755013904}
   - component: {fileID: 755013903}
-  - component: {fileID: 755013902}
   - component: {fileID: 755013905}
+  - component: {fileID: 755013902}
   m_Layer: 0
   m_Name: GameController
   m_TagString: GameController

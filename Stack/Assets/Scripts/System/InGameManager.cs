@@ -35,7 +35,7 @@ public class InGameManager : Singleton<InGameManager>
     public Event EnemyDeadEvent = new Event();
     public Event UseSkillEvent = new Event();
     public Event GameClearEvent = new Event();
-
+    public Event GameResetEvent = new Event();
 
     public GameState CurrentState { get; private set; }
 
@@ -45,10 +45,8 @@ public class InGameManager : Singleton<InGameManager>
     float remainPlayTime;
     int cubeCount;
 
-    /*     */
     Stack<GameObject> cubeStack = new Stack<GameObject>();
     SortedDictionary<int, GameObject> dic = new SortedDictionary<int, GameObject>();
-    // 배열로??
 
     #region Set Stage
     void Awake()
@@ -61,17 +59,15 @@ public class InGameManager : Singleton<InGameManager>
         PlayerHitEvent.AddListener(ShowPlayerLife);
         EnemyDeadEvent.AddListener(EnemyDead);
         UseSkillEvent.AddListener(UseSkill);
-        GameClearEvent.AddListener(Clear);
+        GameClearEvent.AddListener(ClearGame);
+        GameResetEvent.AddListener(ResetGame);
     }
 
     public void Init()
     {
+        Debug.Log(" ====== Init =======");
         SetGameState(GameState.Ready);
-        LogClear();
-
-        SetPlayer();
-        remainPlayTime = SetPlayTime(stageLevel);
-        gameUI.InitUI(stageLevel);
+        GetPlayer();
     }
 
     void LogClear()
@@ -82,17 +78,48 @@ public class InGameManager : Singleton<InGameManager>
 
     public void StartStage()
     {
+        Debug.Log(" ====== Start =======");
         SetGameState(GameState.Play);
+        ResetGame();
+
         levelMgr.Init(stageLevel);
         StartCoroutine(CO_Elapse());
+
+        string startMessage = string.Format("Level {0} Start", stageLevel);
+        gameUI.ShowText(startMessage);
+    }
+
+    /// <summary>
+    /// 게임 초기화
+    /// </summary>
+    void ResetGame()
+    {
+        Debug.Log(" ====== Reset =======");
+        StopCoroutine(CO_Elapse());
+
+        LogClear();
+        SetPlayer();
+        gameUI.InitUI(stageLevel);
+
+        for (int i = 0; i < cubeStack.Count; i++)
+        {
+            var obj = cubeStack.Pop();
+            ObjectPool.Get.ReturnObject(obj);
+        }
     }
 
     public void SetGameState(GameState state)
     {
+        Debug.Log("@@ STATE : " + state);
         CurrentState = state;
     }
 
-    void SetPlayer()
+    public bool CheckPlaying()
+    {
+        return CurrentState == GameState.Play;
+    }
+
+    void GetPlayer()
     {
         if (player == null)
         {
@@ -104,15 +131,14 @@ public class InGameManager : Singleton<InGameManager>
                 return;
             }
 
-            player.Init();
+            player.GetPlayer();
             cameraCtrl.Init(player.transform);
         }
     }
 
-    float SetPlayTime(int level)
+    void SetPlayer()
     {
-        // todo : level에 따른 plattime 세팅?
-        return Defines.PLAY_TIME;
+        player.Init();
     }
 
     void ShowPlayerLife(float ratio)
@@ -128,6 +154,8 @@ public class InGameManager : Singleton<InGameManager>
 
     IEnumerator CO_Elapse()
     {
+        remainPlayTime = Defines.PLAY_TIME;
+
         while (remainPlayTime > 0)
         {
             if (CurrentState == GameState.Stop || CurrentState == GameState.Ready
@@ -136,7 +164,7 @@ public class InGameManager : Singleton<InGameManager>
                 yield return null;
             }
 
-            if (CurrentState == GameState.Play)
+            else if (CheckPlaying())
             {
                 yield return updateTime;
                 remainPlayTime--;
@@ -149,18 +177,20 @@ public class InGameManager : Singleton<InGameManager>
 
     public void GameOver()
     {
-        Debug.Log("GAME OVER!!");
         SetGameState(GameState.GameOver);
-        
+        gameUI.ShowText("Game Over");
     }
 
-    void Clear()
+    void ClearGame()
     {
-        Debug.Log("GAME CLEAR~@@");
         SetGameState(GameState.Clear);
+        gameUI.ShowText("Stage Clear");
+        ++stageLevel;
+
+        StartStage();
     }
 
-    void QuitGame()
+    public void QuitGame()
     {
         remainPlayTime = 0;
         Application.Quit();

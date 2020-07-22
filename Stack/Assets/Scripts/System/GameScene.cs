@@ -6,5 +6,5 @@ public class GameScene : MonoBehaviour {
     {
         InGameManager.Instance.Init();
         InGameManager.Instance.StartStage();
-	}
+    }
 }

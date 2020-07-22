@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ManaCube : MonoBehaviour
 {
@@ -14,28 +12,19 @@ public class ManaCube : MonoBehaviour
     {
         isGround = false;
         //coll.isTrigger = true;
-        StartCoroutine(DropCube());
     }
 
-    void OnDisable()
+    void FixedUpdate()
     {
-        StopCoroutine(DropCube());
+        DropCube();
     }
 
-    public IEnumerator DropCube()
+    void DropCube()
     {
-        while (!isGround)
+        if (!isGround && InGameManager.Instance.CheckPlaying())
         {
-            while (InGameManager.Instance.CheckPlaying())
-            {
-                transform.Translate(Vector3.down * 6f * Time.deltaTime);
-                yield return waitFixedUpdate;
-            }
+            transform.Translate(Vector3.down * 6f * Time.deltaTime);
         }
-
-        Vector3 pos = transform.position;
-        transform.position = new Vector3(pos.x, Mathf.Round(pos.y), 0);
-        InGameManager.Instance.StackManaCube(gameObject);
     }
 
     void PlaceUnderPlayer(Transform player)
@@ -62,6 +51,7 @@ public class ManaCube : MonoBehaviour
             {
                 isGround = true;
                 //coll.isTrigger = false;
+                StackCube();
             }
             else if(collision.transform.CompareTag(Defines.key_Player))
             {
@@ -70,5 +60,10 @@ public class ManaCube : MonoBehaviour
         }
     }
 
-
+    void StackCube()
+    {
+        Vector3 pos = transform.position;
+        transform.position = new Vector3(pos.x, Mathf.Round(pos.y), 0);
+        InGameManager.Instance.StackManaCube(gameObject);
+    }
 }
