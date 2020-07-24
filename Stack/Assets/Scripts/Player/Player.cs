@@ -27,11 +27,14 @@ public abstract class Player : MonoBehaviour
     public float Hp { get; protected set; }
 
     protected Vector3 bulletOffset = new Vector3(0f, 1f, 0f);
+    protected Vector3 startPosisiton = new Vector3(3f, 0f, 0f);
 
     protected abstract void SetPlayer();
     public abstract void Skill_1();
     public abstract void Skill_2();
     public abstract void Skill_3();
+
+    Coroutine attackCoroutine;
 
     public void GetPlayer()
     {
@@ -41,9 +44,12 @@ public abstract class Player : MonoBehaviour
 
     public void Init()
     {
+        transform.position = startPosisiton;
         SetPlayer();
-        StopCoroutine(CO_Attack());
-        StartCoroutine(CO_Attack());
+
+        if (attackCoroutine != null)
+            StopCoroutine(attackCoroutine);
+        attackCoroutine = StartCoroutine(CO_Attack());
     }
 
     protected IEnumerator CO_Attack()

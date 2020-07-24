@@ -1,4 +1,5 @@
-﻿using UnityEngine.Events;
+﻿using UnityEngine;
+using UnityEngine.Events;
 
 public static class Defines
 {
@@ -36,6 +37,20 @@ public static class Defines
     public const string key_Jump = "Jump";
 
     #endregion
+
+    public static void PrintLog(object message)
+    {
+#if UNITY_EDITOR
+        Debug.Log(message);
+#endif
+    }
+
+    public static void PrintLogFormat(string format, params object[] args)
+    {
+#if UNITY_EDITOR
+        Debug.LogFormat(format, args);
+#endif
+    }
 }
 
 public class Event : UnityEvent { }

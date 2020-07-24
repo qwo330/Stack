@@ -35,20 +35,20 @@ public class InGameManager : Singleton<InGameManager>
     public Event EnemyDeadEvent = new Event();
     public Event UseSkillEvent = new Event();
     public Event GameClearEvent = new Event();
-    public Event GameResetEvent = new Event();
+    public Event GameStartEvent = new Event();
 
     public GameState CurrentState { get; private set; }
 
     public Player player { get; private set; }
-    WaitForSeconds updateTime = new WaitForSeconds(1f);
+    WaitForSeconds waitOneSeconds = new WaitForSeconds(1f);
 
     float remainPlayTime;
     int cubeCount;
+    Coroutine elapseCoroutine;
+    Coroutine readyCoroutine;
 
     Stack<GameObject> cubeStack = new Stack<GameObject>();
-    SortedDictionary<int, GameObject> dic = new SortedDictionary<int, GameObject>();
 
-    #region Set Stage
     void Awake()
     {
         levelMgr.gameMgr = this;
@@ -60,57 +60,52 @@ public class InGameManager : Singleton<InGameManager>
         EnemyDeadEvent.AddListener(EnemyDead);
         UseSkillEvent.AddListener(UseSkill);
         GameClearEvent.AddListener(ClearGame);
-        GameResetEvent.AddListener(ResetGame);
     }
 
     public void Init()
     {
-        Debug.Log(" ====== Init =======");
         SetGameState(GameState.Ready);
         GetPlayer();
+
+        StartGame();
     }
 
-    void LogClear()
+    public void StartGame()
     {
-        KillMonsterCount = 0;
-        UseCubeCount = 0;
-    }
-
-    public void StartStage()
-    {
-        Debug.Log(" ====== Start =======");
-        SetGameState(GameState.Play);
-        ResetGame();
-
-        levelMgr.Init(stageLevel);
-        StartCoroutine(CO_Elapse());
-
-        string startMessage = string.Format("Level {0} Start", stageLevel);
-        gameUI.ShowText(startMessage);
-    }
-
-    /// <summary>
-    /// 게임 초기화
-    /// </summary>
-    void ResetGame()
-    {
-        Debug.Log(" ====== Reset =======");
-        StopCoroutine(CO_Elapse());
-
-        LogClear();
-        SetPlayer();
-        gameUI.InitUI(stageLevel);
-
-        for (int i = 0; i < cubeStack.Count; i++)
+        if (readyCoroutine == null)
         {
-            var obj = cubeStack.Pop();
-            ObjectPool.Get.ReturnObject(obj);
+            string startMessage = string.Format("Level {0} Start", stageLevel);
+            gameUI.ShowText(startMessage);
+
+            SetGameState(GameState.Play);
+
+            LogClear();
+            SetPlayer();
+            gameUI.InitUI(stageLevel);
+
+            ResetCube();
+            levelMgr.ResetEnemys();
+
+            if (elapseCoroutine != null)
+                StopCoroutine(elapseCoroutine);
+
+            readyCoroutine = StartCoroutine(StartProcess());
         }
+    }
+
+    IEnumerator StartProcess()
+    {
+        yield return waitOneSeconds;
+        yield return waitOneSeconds;
+
+        elapseCoroutine = StartCoroutine(CO_Elapse());
+        levelMgr.Init(stageLevel);
+
+        readyCoroutine = null;
     }
 
     public void SetGameState(GameState state)
     {
-        Debug.Log("@@ STATE : " + state);
         CurrentState = state;
     }
 
@@ -127,7 +122,7 @@ public class InGameManager : Singleton<InGameManager>
 
             if (player == null)
             {
-                Debug.Log("플레이어를 찾을 수 없음");
+                Defines.PrintLog("플레이어를 찾을 수 없음");
                 return;
             }
 
@@ -140,17 +135,6 @@ public class InGameManager : Singleton<InGameManager>
     {
         player.Init();
     }
-
-    void ShowPlayerLife(float ratio)
-    {
-        gameUI.ShowPlayerLife(ratio);
-    }
-
-    void ShowPlayTime(float time)
-    {
-        gameUI.ShowPlayTime(time);
-    }
-    #endregion
 
     IEnumerator CO_Elapse()
     {
@@ -166,13 +150,13 @@ public class InGameManager : Singleton<InGameManager>
 
             else if (CheckPlaying())
             {
-                yield return updateTime;
+                yield return waitOneSeconds;
                 remainPlayTime--;
                 ShowPlayTime(remainPlayTime);
             }
         }
 
-        GameOver();
+        SetGameState(GameState.GameOver);
     }
 
     public void GameOver()
@@ -187,14 +171,13 @@ public class InGameManager : Singleton<InGameManager>
         gameUI.ShowText("Stage Clear");
         ++stageLevel;
 
-        StartStage();
+        StartGame();
     }
 
     public void QuitGame()
     {
-        remainPlayTime = 0;
-        Application.Quit();
 #if !UNITY_EDITOR
+        Application.Quit();
         System.Diagnostics.Process.GetCurrentProcess().Kill();
 #endif
     }
@@ -227,7 +210,27 @@ public class InGameManager : Singleton<InGameManager>
         cubeStack.Push(manaCube);
         gameUI.ShowCube(++cubeCount);
     }
+
+    void ResetCube()
+    {
+        foreach (var obj in cubeStack)
+        {
+            ObjectPool.Get.ReturnObject(obj);
+        }
+        cubeStack.Clear();
+        cubeCount = 0;
+    }
     #endregion
+
+    void ShowPlayerLife(float ratio)
+    {
+        gameUI.ShowPlayerLife(ratio);
+    }
+
+    void ShowPlayTime(float time)
+    {
+        gameUI.ShowPlayTime(time);
+    }
 
     void EnemyDead()
     {
@@ -237,5 +240,11 @@ public class InGameManager : Singleton<InGameManager>
     void UseSkill()
     {
         UseCubeCount++;
+    }
+
+    void LogClear()
+    {
+        KillMonsterCount = 0;
+        UseCubeCount = 0;
     }
 }

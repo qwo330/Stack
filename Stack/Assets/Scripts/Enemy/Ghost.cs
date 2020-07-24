@@ -9,8 +9,8 @@ public class Ghost : BaseEnemy, IAttackable
     {
         maxHP = 1 + (int)(level * 0.5f);
         hp = maxHP;
-        moveSpeed = 1.5f;
-        attackInterval = 4f;
+        moveSpeed = 3f;
+        attackInterval = 3f;
 
         attackRoutine = StartCoroutine(CO_Attack());
     }

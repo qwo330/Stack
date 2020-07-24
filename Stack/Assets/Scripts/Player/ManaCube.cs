@@ -11,6 +11,7 @@ public class ManaCube : MonoBehaviour
     void OnEnable()
     {
         isGround = false;
+        InGameManager.Instance.StackManaCube(gameObject);
         //coll.isTrigger = true;
     }
 
@@ -64,6 +65,6 @@ public class ManaCube : MonoBehaviour
     {
         Vector3 pos = transform.position;
         transform.position = new Vector3(pos.x, Mathf.Round(pos.y), 0);
-        InGameManager.Instance.StackManaCube(gameObject);
+        //InGameManager.Instance.StackManaCube(gameObject);
     }
 }

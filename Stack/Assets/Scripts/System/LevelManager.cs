@@ -31,16 +31,13 @@ public class LevelManager : MonoBehaviour
 
     void Start()
     {
-        InGameManager.Instance.GameClearEvent.AddListener(ClearGame);
+        InGameManager.Instance.GameStartEvent.AddListener(ResetEnemys);
     }
 
     public void Init(int level)
     {
-        Debug.Log(" ====== Level Init =======");
         SetLevel(level);
         SpawnEnemyLoop();
-        //StopCoroutine(CO_SpawnEnemy());
-        //StartCoroutine(CO_SpawnEnemy());
     }
 
     public void SetLevel(int level)
@@ -60,7 +57,6 @@ public class LevelManager : MonoBehaviour
     }
 
     void SpawnEnemyLoop()
-    //IEnumerator CO_SpawnEnemy()
     {
         // todo :  level에 따른 몬스터 타입 변경 및 스폰 속도, 개수 조절 등 난이도 설정 필요
         System.Action loopMethod = () =>
@@ -74,28 +70,6 @@ public class LevelManager : MonoBehaviour
         };
 
         enemySpawnCoroutine = StartCoroutine(CO_PlayLoop(loopMethod));
-
-
-
-
-        //if (InGameManager.Instance.CheckPlaying())
-        //{
-        //    while (InGameManager.Instance.CheckPlaying())
-        //    {
-        //        yield return spawnInterval;
-        //        int spawnCount = Random.Range(minSpawnCount, maxSpawnCount);
-
-        //        for (int i = 0; i < spawnCount; i++)
-        //        {
-        //            SpawnEnemy();
-        //        }
-        //    }
-        //}
-        //else
-        //{
-        //    while (true)
-        //        yield return null;
-        //}
     }
 
     public IEnumerator CO_PlayLoop(System.Action method)
@@ -156,19 +130,19 @@ public class LevelManager : MonoBehaviour
         return result;
     }
 
-    void ClearGame()
+    public void ResetEnemys()
     {
-        ReturnAllEnemys();
         if (enemySpawnCoroutine != null)
             StopCoroutine(enemySpawnCoroutine);
+        ReturnAllEnemys();
     }
 
     void ReturnAllEnemys()
     {
-        for (int i = 0; i < SpawnedEnemys.Count; i++)
+        foreach (var obj in SpawnedEnemys)
         {
-            var obj = SpawnedEnemys.Pop();
             ObjectPool.Get.ReturnObject(obj);
         }
+        SpawnedEnemys.Clear();
     }
 }

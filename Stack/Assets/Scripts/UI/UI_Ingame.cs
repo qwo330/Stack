@@ -66,7 +66,7 @@ public class UI_Ingame : MonoBehaviour
 
     public void ShowPlayTime(float time)
     {
-        txtTime.text = time.ToString("N2");
+        txtTime.text = time.ToString("G");
     }
 
     public void ShowCube(int count)
@@ -81,22 +81,27 @@ public class UI_Ingame : MonoBehaviour
 
     public void OnClickPause()
     {
-        GameState state = GameState.Stop;
-        InGameManager.Instance.SetGameState(state);
+        InGameManager.Instance.SetGameState(GameState.Stop);
         PauseWindow.SetActive(true);
+    }
+
+    void ClosePauseWindow()
+    {
+        InGameManager.Instance.SetGameState(GameState.Play);
+        PauseWindow.SetActive(false);
     }
 
     public void OnClickContinue()
     {
-        GameState state = GameState.Play;
-        InGameManager.Instance.SetGameState(state);
-        PauseWindow.SetActive(false);
+        ClosePauseWindow();
     }
 
     public void OnClickRestart()
     {
-        GameState state = GameState.Ready;
-        InGameManager.Instance.StartStage();
+        InGameManager.Instance.SetGameState(GameState.Ready);
+        InGameManager.Instance.StartGame();
+        ClosePauseWindow();
+        //InGameManager.Instance.GameResetEvent.Invoke();
     }
 
     public void OnClickQuit()
